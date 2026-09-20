@@ -36,6 +36,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -43,6 +44,13 @@ from dataclasses import dataclass, asdict, field
 from enum import Enum
 from pathlib import Path
 from typing import Optional, List, Dict, Tuple, Any
+
+# Windows npm shims install as mmdc.cmd, which subprocess cannot launch by bare name.
+MMDC = shutil.which("mmdc") or "mmdc"
+
+# Windows consoles default to cp1252, which cannot encode the emoji status markers.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
 class DiagramType(Enum):
@@ -411,7 +419,7 @@ class ResilientDiagramGenerator:
 
         try:
             result = subprocess.run(
-                ['mmdc', '-i', str(mmd_path), '-o', str(image_path), '-b', 'transparent'],
+                [MMDC, '-i', str(mmd_path), '-o', str(image_path), '-b', 'transparent'],
                 capture_output=True,
                 text=True,
                 timeout=60
@@ -439,7 +447,7 @@ class ResilientDiagramGenerator:
         """Check if mermaid-cli (mmdc) is installed."""
         try:
             result = subprocess.run(
-                ['mmdc', '--version'],
+                [MMDC, '--version'],
                 capture_output=True,
                 timeout=5
             )

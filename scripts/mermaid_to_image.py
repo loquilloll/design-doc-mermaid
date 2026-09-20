@@ -26,9 +26,17 @@ import argparse
 import os
 import subprocess
 import sys
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional, List
+
+# Windows npm shims install as mmdc.cmd, which subprocess cannot launch by bare name.
+MMDC = shutil.which("mmdc") or "mmdc"
+
+# Windows consoles default to cp1252, which cannot encode the emoji status markers.
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 
 class MermaidRenderer:
@@ -81,7 +89,7 @@ class MermaidRenderer:
             True if successful, False otherwise
         """
         # Build mmdc command
-        cmd = ['mmdc', '-i', str(input_path), '-o', str(output_path)]
+        cmd = [MMDC, '-i', str(input_path), '-o', str(output_path)]
 
         # Add options
         cmd.extend(['-t', self.theme])
@@ -212,7 +220,7 @@ class MermaidRenderer:
         """Check if mermaid-cli (mmdc) is installed."""
         try:
             result = subprocess.run(
-                ['mmdc', '--version'],
+                [MMDC, '--version'],
                 capture_output=True,
                 timeout=5
             )
